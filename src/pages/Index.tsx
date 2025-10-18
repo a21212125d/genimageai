@@ -180,6 +180,17 @@ const Index = () => {
             </Card>
           )}
         </div>
+
+        {/* Credits Section */}
+        <div className="mt-20 pt-8 border-t border-border/50">
+          <Card className="p-6 glass-card border-border/50 text-center">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Developed by</p>
+              <h3 className="text-2xl font-bold gradient-text">Pramit</h3>
+              <p className="text-sm text-muted-foreground">Main Developer</p>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );
