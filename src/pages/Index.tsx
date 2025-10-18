@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Loader2, Sparkles, Download } from "lucide-react";
+import { Loader2, Sparkles, Download, Upload, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -10,6 +10,13 @@ const Index = () => {
   const [prompt, setPrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Image-to-image state
+  const [editPrompt, setEditPrompt] = useState("");
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [editedImage, setEditedImage] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -50,15 +57,78 @@ const Index = () => {
     }
   };
 
-  const handleDownload = () => {
-    if (!generatedImage) return;
+  const handleDownload = (imageData: string, prefix: string = "generated") => {
+    if (!imageData) return;
 
     const link = document.createElement("a");
-    link.href = generatedImage;
-    link.download = `ai-generated-${Date.now()}.png`;
+    link.href = imageData;
+    link.download = `ai-${prefix}-${Date.now()}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please upload an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setUploadedImage(e.target?.result as string);
+      setEditedImage(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleEditImage = async () => {
+    if (!uploadedImage || !editPrompt.trim()) {
+      toast({
+        title: "Input required",
+        description: "Please upload an image and enter editing instructions",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsEditing(true);
+    setEditedImage(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("edit-image", {
+        body: { 
+          prompt: editPrompt,
+          imageUrl: uploadedImage 
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.image) {
+        setEditedImage(data.image);
+        toast({
+          title: "Image edited!",
+          description: "Your AI-edited image is ready",
+        });
+      }
+    } catch (error: any) {
+      console.error("Edit error:", error);
+      toast({
+        title: "Edit failed",
+        description: error.message || "Failed to edit image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEditing(false);
+    }
   };
 
   return (
@@ -131,7 +201,7 @@ const Index = () => {
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Your Generated Image</h2>
                   <Button
-                    onClick={handleDownload}
+                    onClick={() => handleDownload(generatedImage, "generated")}
                     variant="outline"
                     size="sm"
                   >
@@ -179,6 +249,124 @@ const Index = () => {
               </ul>
             </Card>
           )}
+
+          {/* Image-to-Image Section */}
+          <div className="mt-16">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold mb-2">
+                <span className="gradient-text">Edit Your Images</span>
+              </h2>
+              <p className="text-muted-foreground">
+                Upload an image and transform it with AI
+              </p>
+            </div>
+
+            <Card className="p-6 glass-card border-border/50">
+              <div className="space-y-4">
+                {/* File Upload Area */}
+                <div>
+                  <label className="text-sm font-medium block mb-2">
+                    Upload Image
+                  </label>
+                  <div className="relative">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      variant="outline"
+                      className="w-full"
+                      disabled={isEditing}
+                    >
+                      <Upload className="w-4 h-4" />
+                      {uploadedImage ? "Change Image" : "Upload Image"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Preview uploaded image */}
+                {uploadedImage && (
+                  <div className="relative rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={uploadedImage}
+                      alt="Uploaded"
+                      className="w-full h-auto max-h-64 object-contain"
+                    />
+                  </div>
+                )}
+
+                {/* Edit Instructions */}
+                <div>
+                  <label htmlFor="editPrompt" className="text-sm font-medium block mb-2">
+                    How should we transform this image?
+                  </label>
+                  <Textarea
+                    id="editPrompt"
+                    placeholder="Make it look like a watercolor painting, add sunset lighting, make it rainy..."
+                    value={editPrompt}
+                    onChange={(e) => setEditPrompt(e.target.value)}
+                    className="min-h-[100px] bg-background/50 resize-none"
+                    disabled={isEditing}
+                  />
+                </div>
+
+                <Button
+                  onClick={handleEditImage}
+                  disabled={isEditing || !uploadedImage}
+                  variant="hero"
+                  size="lg"
+                  className="w-full"
+                >
+                  {isEditing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Editing...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="w-5 h-5" />
+                      Edit Image
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
+
+            {/* Edited Image Display */}
+            {editedImage && (
+              <Card className="p-6 glass-card border-border/50 animate-in fade-in-50 duration-500 mt-8">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold">Your Edited Image</h2>
+                    <Button
+                      onClick={() => handleDownload(editedImage, "edited")}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </Button>
+                  </div>
+                  
+                  <div className="relative rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={editedImage}
+                      alt="AI edited artwork"
+                      className="w-full h-auto"
+                    />
+                  </div>
+
+                  <p className="text-sm text-muted-foreground italic">
+                    "{editPrompt}"
+                  </p>
+                </div>
+              </Card>
+            )}
+          </div>
         </div>
 
         {/* Credits Section */}
