@@ -1,15 +1,30 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Loader2, Sparkles, Download, Upload, Image as ImageIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Sparkles, Download, Upload, Image as ImageIcon, History, Library, Shuffle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { Navbar } from "@/components/Navbar";
+import { GenerationSettings } from "@/components/GenerationSettings";
+import { PromptEnhancer } from "@/components/PromptEnhancer";
+import { GenerationHistory } from "@/components/GenerationHistory";
+import { PromptLibrary } from "@/components/PromptLibrary";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Advanced settings
+  const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [style, setStyle] = useState("photorealistic");
+  const [numImages, setNumImages] = useState(1);
   
   // Image-to-image state
   const [editPrompt, setEditPrompt] = useState("");
@@ -17,6 +32,22 @@ const Index = () => {
   const [editedImage, setEditedImage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -32,14 +63,26 @@ const Index = () => {
     setGeneratedImage(null);
 
     try {
+      const enhancedPrompt = `${prompt}, ${style} style, ${aspectRatio} aspect ratio`;
+      
       const { data, error } = await supabase.functions.invoke("generate-image", {
-        body: { prompt },
+        body: { prompt: enhancedPrompt },
       });
 
       if (error) throw error;
 
       if (data?.image) {
         setGeneratedImage(data.image);
+        
+        // Save to history
+        await supabase.from("generation_history").insert({
+          user_id: user!.id,
+          prompt: prompt,
+          image_data: data.image,
+          generation_type: "text-to-image",
+          settings: { aspectRatio, style, numImages },
+        });
+
         toast({
           title: "Image generated!",
           description: "Your AI-generated image is ready",
@@ -55,6 +98,21 @@ const Index = () => {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleSurpriseMe = () => {
+    const surprisePrompts = [
+      "A magical forest with glowing mushrooms and fairy lights at twilight",
+      "A futuristic city skyline with flying cars and neon lights",
+      "An underwater palace made of coral and seashells",
+      "A steampunk airship soaring through cloudy skies",
+      "A cozy library filled with ancient books and a fireplace",
+      "A dragon perched on a mountain peak during a thunderstorm",
+      "A cyberpunk street market with holographic vendors",
+      "An enchanted garden with flowers that glow in the dark",
+    ];
+    const randomPrompt = surprisePrompts[Math.floor(Math.random() * surprisePrompts.length)];
+    setPrompt(randomPrompt);
   };
 
   const handleDownload = (imageData: string, prefix: string = "generated") => {
@@ -114,6 +172,16 @@ const Index = () => {
 
       if (data?.image) {
         setEditedImage(data.image);
+        
+        // Save to history
+        await supabase.from("generation_history").insert({
+          user_id: user!.id,
+          prompt: editPrompt,
+          image_data: data.image,
+          generation_type: "image-to-image",
+          settings: {},
+        });
+
         toast({
           title: "Image edited!",
           description: "Your AI-edited image is ready",
@@ -133,10 +201,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      <Navbar />
+      
       {/* Animated background gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div>
       
-      <div className="relative z-10 container mx-auto px-4 py-12 md:py-20">
+      <div className="relative z-10 container mx-auto px-4 py-24 md:py-28">
         {/* Hero Section */}
         <div className="text-center mb-12 space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-4">
@@ -154,45 +224,80 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Generation Interface */}
-        <div className="max-w-4xl mx-auto space-y-8">
-          <Card className="p-6 glass-card border-border/50">
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="prompt" className="text-sm font-medium block mb-2">
-                  Describe your image
-                </label>
-                <Textarea
-                  id="prompt"
-                  placeholder="A serene mountain landscape at sunset with purple and orange skies, reflection in a crystal clear lake, ultra realistic, 8k..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[120px] bg-background/50 resize-none"
-                  disabled={isGenerating}
-                />
-              </div>
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="generate" className="max-w-6xl mx-auto">
+          <TabsList className="grid w-full grid-cols-3 glass-card">
+            <TabsTrigger value="generate">Generate</TabsTrigger>
+            <TabsTrigger value="history">
+              <History className="w-4 h-4 mr-2" />
+              History
+            </TabsTrigger>
+            <TabsTrigger value="library">
+              <Library className="w-4 h-4 mr-2" />
+              Prompts
+            </TabsTrigger>
+          </TabsList>
 
-              <Button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                variant="hero"
-                size="lg"
-                className="w-full"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    Generate Image
-                  </>
-                )}
-              </Button>
-            </div>
-          </Card>
+          {/* Generate Tab */}
+          <TabsContent value="generate" className="space-y-8 mt-8">
+            <Card className="p-6 glass-card border-border/50">
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <PromptEnhancer prompt={prompt} onEnhance={setPrompt} />
+                  <Button
+                    onClick={handleSurpriseMe}
+                    variant="outline"
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  >
+                    <Shuffle className="w-4 h-4 mr-2" />
+                    Surprise Me
+                  </Button>
+                </div>
+
+                <div>
+                  <label htmlFor="prompt" className="text-sm font-medium block mb-2">
+                    Describe your image
+                  </label>
+                  <Textarea
+                    id="prompt"
+                    placeholder="A serene mountain landscape at sunset with purple and orange skies, reflection in a crystal clear lake, ultra realistic, 8k..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    className="min-h-[120px] bg-background/50 resize-none"
+                    disabled={isGenerating}
+                  />
+                </div>
+
+                <GenerationSettings
+                  aspectRatio={aspectRatio}
+                  onAspectRatioChange={setAspectRatio}
+                  style={style}
+                  onStyleChange={setStyle}
+                  numImages={numImages}
+                  onNumImagesChange={setNumImages}
+                />
+
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  variant="hero"
+                  size="lg"
+                  className="w-full"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Generate Image
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
 
           {/* Generated Image Display */}
           {generatedImage && (
@@ -367,7 +472,18 @@ const Index = () => {
               </Card>
             )}
           </div>
-        </div>
+          </TabsContent>
+
+          {/* History Tab */}
+          <TabsContent value="history" className="mt-8">
+            <GenerationHistory />
+          </TabsContent>
+
+          {/* Library Tab */}
+          <TabsContent value="library" className="mt-8">
+            <PromptLibrary onSelectPrompt={setPrompt} />
+          </TabsContent>
+        </Tabs>
 
         {/* Credits Section */}
         <div className="mt-20 pt-8 border-t border-border/50">
