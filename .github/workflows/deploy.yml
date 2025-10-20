@@ -1,0 +1,34 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # 👈 Change to your primary branch (e.g., master or main)
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4 # Gets your code from the repository
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Ensures the correct Node environment is set up
+
+      - name: Install dependencies 🔧
+        run: npm install
+
+      - name: Build project 🏗️
+        # This executes the build command that uses your fixed vite.config.js
+        run: npm run build 
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist # Tells the action to deploy the contents of the 'dist' folder
+          # This creates and publishes to the 'gh-pages' branch
+          publish_branch: gh-pages
