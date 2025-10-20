@@ -3,15 +3,22 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # 👈 Change to your primary branch (e.g., master or main)
+      - main # 👈 Check your primary branch name
 
 jobs:
   build-and-deploy:
+    # 🌟 ADD THIS PERMISSIONS BLOCK HERE 🌟
+    permissions:
+      contents: write 
+      pages: write   # Add pages permission if using the newer deployment method
+      id-token: write # Optional, but good for future-proofing
+
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v4 # Gets your code from the repository
+        uses: actions/checkout@v4 
+
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
