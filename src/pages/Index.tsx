@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, Download, Upload, Image as ImageIcon, History, Shuffle } from "lucide-react";
+import { Loader2, Sparkles, Download, Upload, Image as ImageIcon, History, Shuffle, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -225,11 +225,15 @@ const Index = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="generate" className="max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-2 glass-card">
+          <TabsList className="grid w-full grid-cols-3 glass-card">
             <TabsTrigger value="generate">Generate</TabsTrigger>
             <TabsTrigger value="history">
               <History className="w-4 h-4 mr-2" />
               History
+            </TabsTrigger>
+            <TabsTrigger value="download">
+              <Smartphone className="w-4 h-4 mr-2" />
+              Download
             </TabsTrigger>
           </TabsList>
 
@@ -470,6 +474,52 @@ const Index = () => {
           {/* History Tab */}
           <TabsContent value="history" className="mt-8">
             <GenerationHistory />
+          </TabsContent>
+
+          {/* Download Tab */}
+          <TabsContent value="download" className="mt-8">
+            <Card className="p-8 glass-card border-border/50">
+              <div className="text-center mb-8">
+                <Smartphone className="w-16 h-16 mx-auto mb-4 text-primary" />
+                <h2 className="text-3xl font-bold mb-2 gradient-text">Download Mobile App</h2>
+                <p className="text-muted-foreground">
+                  Get the AI Image Generator on your Android device
+                </p>
+              </div>
+
+              <div className="max-w-md mx-auto space-y-6">
+                <Card className="p-6 border-border/50">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <Smartphone className="w-8 h-8 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-2">Android App</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Download and install the Android version of our app
+                      </p>
+                      <Button 
+                        variant="hero" 
+                        className="w-full"
+                        asChild
+                      >
+                        <a href="/app-release.apk" download>
+                          <Download className="w-4 h-4 mr-2" />
+                          Download APK
+                        </a>
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Compatible with Android 5.0 and above
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <div className="text-center text-sm text-muted-foreground">
+                  <p>iOS version coming soon</p>
+                </div>
+              </div>
+            </Card>
           </TabsContent>
         </Tabs>
 
