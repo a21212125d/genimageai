@@ -1,14 +1,11 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 
 interface GenerationSettingsProps {
   aspectRatio: string;
   onAspectRatioChange: (value: string) => void;
   style: string;
   onStyleChange: (value: string) => void;
-  numImages: number;
-  onNumImagesChange: (value: number) => void;
 }
 
 export const GenerationSettings = ({
@@ -16,11 +13,9 @@ export const GenerationSettings = ({
   onAspectRatioChange,
   style,
   onStyleChange,
-  numImages,
-  onNumImagesChange,
 }: GenerationSettingsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <Label className="text-white mb-2 block">Aspect Ratio</Label>
         <Select value={aspectRatio} onValueChange={onAspectRatioChange}>
@@ -50,18 +45,6 @@ export const GenerationSettings = ({
             <SelectItem value="watercolor">Watercolor</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-
-      <div>
-        <Label className="text-white mb-2 block">Number of Images: {numImages}</Label>
-        <Slider
-          value={[numImages]}
-          onValueChange={(value) => onNumImagesChange(value[0])}
-          min={1}
-          max={4}
-          step={1}
-          className="mt-2"
-        />
       </div>
     </div>
   );

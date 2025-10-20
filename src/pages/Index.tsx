@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, Download, Upload, Image as ImageIcon, History, Library, Shuffle } from "lucide-react";
+import { Loader2, Sparkles, Download, Upload, Image as ImageIcon, History, Shuffle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,7 +12,7 @@ import { Navbar } from "@/components/Navbar";
 import { GenerationSettings } from "@/components/GenerationSettings";
 import { PromptEnhancer } from "@/components/PromptEnhancer";
 import { GenerationHistory } from "@/components/GenerationHistory";
-import { PromptLibrary } from "@/components/PromptLibrary";
+
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -24,7 +24,6 @@ const Index = () => {
   // Advanced settings
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [style, setStyle] = useState("photorealistic");
-  const [numImages, setNumImages] = useState(1);
   
   // Image-to-image state
   const [editPrompt, setEditPrompt] = useState("");
@@ -80,7 +79,7 @@ const Index = () => {
           prompt: prompt,
           image_data: data.image,
           generation_type: "text-to-image",
-          settings: { aspectRatio, style, numImages },
+          settings: { aspectRatio, style },
         });
 
         toast({
@@ -226,15 +225,11 @@ const Index = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="generate" className="max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 glass-card">
+          <TabsList className="grid w-full grid-cols-2 glass-card">
             <TabsTrigger value="generate">Generate</TabsTrigger>
             <TabsTrigger value="history">
               <History className="w-4 h-4 mr-2" />
               History
-            </TabsTrigger>
-            <TabsTrigger value="library">
-              <Library className="w-4 h-4 mr-2" />
-              Prompts
             </TabsTrigger>
           </TabsList>
 
@@ -273,8 +268,6 @@ const Index = () => {
                   onAspectRatioChange={setAspectRatio}
                   style={style}
                   onStyleChange={setStyle}
-                  numImages={numImages}
-                  onNumImagesChange={setNumImages}
                 />
 
                 <Button
@@ -477,11 +470,6 @@ const Index = () => {
           {/* History Tab */}
           <TabsContent value="history" className="mt-8">
             <GenerationHistory />
-          </TabsContent>
-
-          {/* Library Tab */}
-          <TabsContent value="library" className="mt-8">
-            <PromptLibrary onSelectPrompt={setPrompt} />
           </TabsContent>
         </Tabs>
 
