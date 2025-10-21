@@ -503,9 +503,9 @@ const Index = () => {
                         className="w-full"
                         asChild
                       >
-                        <a href="/app-release.apk" download>
+                        <a href="/GenAI.zip" download>
                           <Download className="w-4 h-4 mr-2" />
-                          Download APK
+                          Download App
                         </a>
                       </Button>
                       <p className="text-xs text-muted-foreground mt-3">
