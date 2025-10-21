@@ -215,7 +215,7 @@ const Index = () => {
           
           <h1 className="flex justify-center mb-4">
             <img 
-              src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=900&size=60&pause=1000&color=F70000&width=800&lines=GenAi;Image+Generator;Free;Safe" 
+              src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=900&size=45&pause=1000&color=F70000&width=600&lines=GenAi;Image+Generator;Free;Safe" 
               alt="GenAi - Animated Title"
               className="max-w-full h-auto"
             />
