@@ -213,11 +213,11 @@ const Index = () => {
             <span className="text-sm text-muted-foreground">Powered by Nano banana AI</span>
           </div>
           
-          <h1 className="flex justify-center mb-4">
+          <h1 className="flex justify-center items-center mb-4">
             <img 
               src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=900&size=45&pause=1000&color=F70000&width=600&lines=GenAi;Image+Generator;Free;Safe" 
               alt="GenAi - Animated Title"
-              className="max-w-full h-auto"
+              className="mx-auto"
             />
           </h1>
           
