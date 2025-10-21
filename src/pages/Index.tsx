@@ -12,6 +12,7 @@ import { Navbar } from "@/components/Navbar";
 import { GenerationSettings } from "@/components/GenerationSettings";
 import { PromptEnhancer } from "@/components/PromptEnhancer";
 import { GenerationHistory } from "@/components/GenerationHistory";
+import { BannerAd } from "@/components/BannerAd";
 
 
 const Index = () => {
@@ -227,6 +228,11 @@ const Index = () => {
           </p>
         </div>
 
+        {/* Top Banner Ad */}
+        <div className="max-w-6xl mx-auto mb-8">
+          <BannerAd position="top" />
+        </div>
+
         {/* Main Content Tabs */}
         <Tabs defaultValue="generate" className="max-w-6xl mx-auto">
           <TabsList className="grid w-full grid-cols-3 glass-card">
@@ -329,6 +335,13 @@ const Index = () => {
                 </p>
               </div>
             </Card>
+          )}
+
+          {/* Middle Banner Ad */}
+          {generatedImage && (
+            <div className="animate-in fade-in-50 duration-500">
+              <BannerAd position="middle" />
+            </div>
           )}
 
           {/* Tips Section */}
@@ -526,6 +539,11 @@ const Index = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Bottom Banner Ad */}
+        <div className="mt-16">
+          <BannerAd position="bottom" />
+        </div>
 
         {/* Credits Section */}
         <div className="mt-20 pt-8 border-t border-border/50">
