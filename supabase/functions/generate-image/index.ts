@@ -14,9 +14,34 @@ serve(async (req) => {
   try {
     const { prompt } = await req.json();
 
+    // Comprehensive input validation
     if (!prompt || typeof prompt !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Prompt is required and must be a string' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Enforce maximum prompt length
+    const MAX_PROMPT_LENGTH = 2000;
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Prompt must be less than ${MAX_PROMPT_LENGTH} characters` }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Sanitize prompt for logging (remove control characters)
+    const sanitizedPrompt = prompt.replace(/[\x00-\x1F\x7F]/g, '');
+    if (sanitizedPrompt.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Prompt cannot be empty' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -36,7 +61,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Generating image with prompt:', prompt);
+    console.log('Generating image with prompt:', sanitizedPrompt.substring(0, 100) + (sanitizedPrompt.length > 100 ? '...' : ''));
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

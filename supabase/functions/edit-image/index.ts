@@ -14,6 +14,7 @@ serve(async (req) => {
   try {
     const { prompt, imageUrl } = await req.json();
 
+    // Comprehensive input validation for prompt
     if (!prompt || typeof prompt !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Prompt is required and must be a string' }),
@@ -24,6 +25,31 @@ serve(async (req) => {
       );
     }
 
+    // Enforce maximum prompt length
+    const MAX_PROMPT_LENGTH = 2000;
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Prompt must be less than ${MAX_PROMPT_LENGTH} characters` }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Sanitize prompt for logging
+    const sanitizedPrompt = prompt.replace(/[\x00-\x1F\x7F]/g, '');
+    if (sanitizedPrompt.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Prompt cannot be empty' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Comprehensive input validation for imageUrl
     if (!imageUrl || typeof imageUrl !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Image URL is required and must be a string' }),
@@ -32,6 +58,34 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    }
+
+    // Validate imageUrl format (data URI or HTTP/HTTPS URL)
+    const isDataUri = imageUrl.startsWith('data:image/');
+    const isHttpUrl = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+    
+    if (!isDataUri && !isHttpUrl) {
+      return new Response(
+        JSON.stringify({ error: 'Image URL must be a valid data URI or HTTP(S) URL' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Limit base64 data size (5MB encoded = ~3.75MB raw)
+    if (isDataUri) {
+      const MAX_BASE64_SIZE = 5 * 1024 * 1024; // 5MB
+      if (imageUrl.length > MAX_BASE64_SIZE) {
+        return new Response(
+          JSON.stringify({ error: 'Image data is too large. Maximum size is 5MB' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -46,7 +100,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Editing image with prompt:', prompt);
+    console.log('Editing image with prompt:', sanitizedPrompt.substring(0, 100) + (sanitizedPrompt.length > 100 ? '...' : ''));
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

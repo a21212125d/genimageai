@@ -12,6 +12,42 @@ Deno.serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
+
+    // Comprehensive input validation
+    if (!prompt || typeof prompt !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Prompt is required and must be a string' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Enforce maximum prompt length
+    const MAX_PROMPT_LENGTH = 2000;
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Prompt must be less than ${MAX_PROMPT_LENGTH} characters` }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Sanitize prompt for logging
+    const sanitizedPrompt = prompt.replace(/[\x00-\x1F\x7F]/g, '');
+    if (sanitizedPrompt.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Prompt cannot be empty' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {

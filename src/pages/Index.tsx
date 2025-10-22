@@ -74,14 +74,24 @@ const Index = () => {
       if (data?.image) {
         setGeneratedImage(data.image);
         
-        // Save to history
-        await supabase.from("generation_history").insert({
-          user_id: user!.id,
-          prompt: prompt,
-          image_data: data.image,
-          generation_type: "text-to-image",
-          settings: { aspectRatio, style },
-        });
+        // Validate image size before storing (5MB limit for base64)
+        const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+        if (data.image.length > MAX_IMAGE_SIZE) {
+          toast({
+            title: "Image too large to save",
+            description: "The generated image exceeds the storage limit. You can still download it.",
+            variant: "destructive",
+          });
+        } else {
+          // Save to history
+          await supabase.from("generation_history").insert({
+            user_id: user!.id,
+            prompt: prompt,
+            image_data: data.image,
+            generation_type: "text-to-image",
+            settings: { aspectRatio, style },
+          });
+        }
 
         toast({
           title: "Image generated!",
@@ -139,9 +149,32 @@ const Index = () => {
       return;
     }
 
+    // Validate file size (5MB limit)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File too large",
+        description: "Image must be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
-      setUploadedImage(e.target?.result as string);
+      const result = e.target?.result as string;
+      
+      // Additional validation for base64 size
+      if (result && result.length > MAX_FILE_SIZE) {
+        toast({
+          title: "Image too large",
+          description: "Encoded image exceeds 5MB limit",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setUploadedImage(result);
       setEditedImage(null);
     };
     reader.readAsDataURL(file);
@@ -173,14 +206,24 @@ const Index = () => {
       if (data?.image) {
         setEditedImage(data.image);
         
-        // Save to history
-        await supabase.from("generation_history").insert({
-          user_id: user!.id,
-          prompt: editPrompt,
-          image_data: data.image,
-          generation_type: "image-to-image",
-          settings: {},
-        });
+        // Validate image size before storing (5MB limit for base64)
+        const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+        if (data.image.length > MAX_IMAGE_SIZE) {
+          toast({
+            title: "Image too large to save",
+            description: "The edited image exceeds the storage limit. You can still download it.",
+            variant: "destructive",
+          });
+        } else {
+          // Save to history
+          await supabase.from("generation_history").insert({
+            user_id: user!.id,
+            prompt: editPrompt,
+            image_data: data.image,
+            generation_type: "image-to-image",
+            settings: {},
+          });
+        }
 
         toast({
           title: "Image edited!",
