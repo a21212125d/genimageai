@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, Sparkles, User } from "lucide-react";
+import { LogOut, Sparkles, User, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +11,7 @@ import {
 
 export const Navbar = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10">
@@ -31,6 +33,10 @@ export const Navbar = () => {
             <DropdownMenuContent align="end" className="glass-card border-white/10">
               <DropdownMenuItem className="text-white">
                 {user.email}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/settings")} className="text-white">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={signOut} className="text-white">
                 <LogOut className="w-4 h-4 mr-2" />
