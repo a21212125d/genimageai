@@ -91,10 +91,10 @@ const Settings = () => {
                 <div className="p-4 rounded-lg bg-background/50 border border-border/50">
                   <h3 className="font-semibold mb-2">Contact Support</h3>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Email: support@aiimage.studio
+                    Email: gen.system.ai@gmail.com
                   </p>
                   <Button variant="outline" size="sm" asChild>
-                    <a href="mailto:support@aiimage.studio">
+                    <a href="mailto:gen.system.ai@gmail.com">
                       Send Email
                     </a>
                   </Button>
@@ -106,7 +106,7 @@ const Settings = () => {
                     Found a bug? Let us know and we'll fix it
                   </p>
                   <Button variant="outline" size="sm" asChild>
-                    <a href="mailto:support@aiimage.studio?subject=Bug Report">
+                    <a href="mailto:gen.system.ai@gmail.com?subject=Bug Report">
                       Report Bug
                     </a>
                   </Button>
