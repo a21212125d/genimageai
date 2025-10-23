@@ -598,6 +598,13 @@ const Index = () => {
             </div>
           </Card>
         </div>
+
+        {/* Footer */}
+        <footer className="mt-12 py-6 text-center text-sm text-muted-foreground">
+          <a href="/privacy-policy" className="hover:text-primary transition-colors">
+            Privacy Policy
+          </a>
+        </footer>
       </div>
     </div>
   );
