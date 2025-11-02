@@ -11,13 +11,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    cors: true,
-    headers: {
-      'Content-Type': 'application/javascript',
-    },
     fs: {
       strict: false,
-      allow: ['..'],
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
