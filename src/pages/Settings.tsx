@@ -82,7 +82,7 @@ const Settings = () => {
                     Learn how to get the most out of AI Image Studio
                   </p>
                   <Button variant="outline" size="sm" asChild>
-                    <a href="https://docs.langdock.com/product/chat/image-generation" target="_blank" rel="noopener noreferrer">
+                    <a href="https://www.mygreatlearning.com/blog/artificial-intelligence-documentaries/" target="_blank" rel="noopener noreferrer">
                       View Docs
                     </a>
                   </Button>
