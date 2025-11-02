@@ -5,8 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // CORRECTED: Setting the base path to the repository name for production builds
-  base: mode === "production" ? '/genimageai/' : '/',
+  // Set base path for all environments to root for Lovable domains
+  base: '/',
   
   server: {
     host: "::",
