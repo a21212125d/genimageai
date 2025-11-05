@@ -59,31 +59,48 @@ serve(async (req) => {
     formData.append('file', blob, 'audio.webm')
     formData.append('model', 'whisper-1')
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OpenAI API key not configured');
+
+    const GOOGLE_API_KEY = Deno.env.get('GOOGLE_API_KEY');
+    if (!GOOGLE_API_KEY) {
+      throw new Error('Google API key not configured');
     }
 
-    // Send to OpenAI
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    // Convert audio to base64 for Gemini API
+    const base64Audio = btoa(String.fromCharCode(...binaryAudio));
+
+    // Send to Gemini API for transcription
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
       },
-      body: formData,
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: "Transcribe this audio to text. Only return the transcribed text, nothing else." },
+            {
+              inline_data: {
+                mime_type: "audio/webm",
+                data: base64Audio
+              }
+            }
+          ]
+        }]
+      }),
     })
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${errorText}`)
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${errorText}`)
     }
 
     const result = await response.json()
+    const transcribedText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
     console.log('Transcription successful');
 
     return new Response(
-      JSON.stringify({ text: result.text }),
+      JSON.stringify({ text: transcribedText }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
