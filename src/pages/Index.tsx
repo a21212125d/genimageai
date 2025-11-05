@@ -13,6 +13,7 @@ import { GenerationSettings } from "@/components/GenerationSettings";
 import { PromptEnhancer } from "@/components/PromptEnhancer";
 import { GenerationHistory } from "@/components/GenerationHistory";
 import { BannerAd } from "@/components/BannerAd";
+import { VoiceRecorder } from "@/components/VoiceRecorder";
 
 
 const Index = () => {
@@ -310,14 +311,20 @@ const Index = () => {
                   <label htmlFor="prompt" className="text-sm font-medium block mb-2">
                     Describe your image
                   </label>
-                  <Textarea
-                    id="prompt"
-                    placeholder="A serene mountain landscape at sunset with purple and orange skies, reflection in a crystal clear lake, ultra realistic, 8k..."
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    className="min-h-[120px] bg-background/50 resize-none"
-                    disabled={isGenerating}
-                  />
+                  <div className="flex gap-2">
+                    <Textarea
+                      id="prompt"
+                      placeholder="A serene mountain landscape at sunset with purple and orange skies, reflection in a crystal clear lake, ultra realistic, 8k..."
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      className="min-h-[120px] bg-background/50 resize-none"
+                      disabled={isGenerating}
+                    />
+                    <VoiceRecorder 
+                      onTranscription={(text) => setPrompt(prev => prev ? `${prev} ${text}` : text)}
+                      disabled={isGenerating}
+                    />
+                  </div>
                 </div>
 
                 <GenerationSettings
@@ -466,14 +473,20 @@ const Index = () => {
                   <label htmlFor="editPrompt" className="text-sm font-medium block mb-2">
                     How should we transform this image?
                   </label>
-                  <Textarea
-                    id="editPrompt"
-                    placeholder="Make it look like a watercolor painting, add sunset lighting, make it rainy..."
-                    value={editPrompt}
-                    onChange={(e) => setEditPrompt(e.target.value)}
-                    className="min-h-[100px] bg-background/50 resize-none"
-                    disabled={isEditing}
-                  />
+                  <div className="flex gap-2">
+                    <Textarea
+                      id="editPrompt"
+                      placeholder="Make it look like a watercolor painting, add sunset lighting, make it rainy..."
+                      value={editPrompt}
+                      onChange={(e) => setEditPrompt(e.target.value)}
+                      className="min-h-[100px] bg-background/50 resize-none"
+                      disabled={isEditing}
+                    />
+                    <VoiceRecorder 
+                      onTranscription={(text) => setEditPrompt(prev => prev ? `${prev} ${text}` : text)}
+                      disabled={isEditing}
+                    />
+                  </div>
                 </div>
 
                 <Button
