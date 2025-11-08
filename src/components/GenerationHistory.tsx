@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Star, Trash2, Image as ImageIcon } from "lucide-react";
+import { Download, Star, Trash2, Image as ImageIcon, FolderPlus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AddToCollectionDialog } from "@/components/Collections/AddToCollectionDialog";
+import { CreateVariations } from "@/components/Variations/CreateVariations";
 
 interface Generation {
   id: string;
@@ -17,6 +19,8 @@ interface Generation {
 export const GenerationHistory = () => {
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [addToCollectionId, setAddToCollectionId] = useState<string | null>(null);
+  const [variationsGenId, setVariationsGenId] = useState<{id: string, prompt: string, image: string} | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -109,21 +113,34 @@ export const GenerationHistory = () => {
               className="w-full h-full object-cover"
             />
           </div>
-          <p className="text-sm text-gray-300 line-clamp-2 mb-2">{gen.prompt}</p>
-          <div className="flex gap-2">
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{gen.prompt}</p>
+          <div className="flex gap-1 flex-wrap">
             <Button
               size="sm"
               variant="ghost"
               onClick={() => handleToggleFavorite(gen.id)}
-              className={favorites.has(gen.id) ? "text-yellow-400" : "text-white"}
+              className={favorites.has(gen.id) ? "text-yellow-400" : ""}
             >
               <Star className={`w-4 h-4 ${favorites.has(gen.id) ? "fill-current" : ""}`} />
             </Button>
             <Button
               size="sm"
               variant="ghost"
+              onClick={() => setAddToCollectionId(gen.id)}
+            >
+              <FolderPlus className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setVariationsGenId({id: gen.id, prompt: gen.prompt, image: gen.image_data})}
+            >
+              <Sparkles className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={() => handleDownload(gen.image_data, gen.prompt)}
-              className="text-white"
             >
               <Download className="w-4 h-4" />
             </Button>
@@ -131,13 +148,29 @@ export const GenerationHistory = () => {
               size="sm"
               variant="ghost"
               onClick={() => handleDelete(gen.id)}
-              className="text-red-400"
+              className="text-destructive"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
       ))}
+      
+      <AddToCollectionDialog
+        open={!!addToCollectionId}
+        onClose={() => setAddToCollectionId(null)}
+        generationId={addToCollectionId || ""}
+      />
+
+      {variationsGenId && (
+        <CreateVariations
+          open={!!variationsGenId}
+          onClose={() => setVariationsGenId(null)}
+          imageUrl={variationsGenId.image}
+          originalPrompt={variationsGenId.prompt}
+          onComplete={loadGenerations}
+        />
+      )}
     </div>
   );
 };

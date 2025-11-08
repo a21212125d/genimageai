@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, Sparkles, User, Settings } from "lucide-react";
+import { LogOut, Sparkles, User, Settings, Image } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -26,7 +26,13 @@ export const Navbar = () => {
           </h1>
         </div>
 
-        {user && (
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => navigate("/gallery")}>
+            <Image className="w-4 h-4 mr-2" />
+            Gallery
+          </Button>
+
+          {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="text-white">
@@ -47,7 +53,8 @@ export const Navbar = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+          )}
+        </div>
       </div>
     </nav>
   );
