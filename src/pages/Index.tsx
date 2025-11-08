@@ -8,7 +8,6 @@ import { Loader2, Sparkles, Download, Upload, Image as ImageIcon, History, Shuff
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useCredits } from "@/hooks/useCredits";
 import { Navbar } from "@/components/Navbar";
 import { GenerationSettings } from "@/components/GenerationSettings";
 import { PromptEnhancer } from "@/components/PromptEnhancer";
@@ -19,7 +18,6 @@ import { VoiceRecorder } from "@/components/VoiceRecorder";
 
 const Index = () => {
   const { user, loading } = useAuth();
-  const { deductCredits, fetchCredits } = useCredits();
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -62,17 +60,6 @@ const Index = () => {
       return;
     }
 
-    // Check and deduct credits
-    const creditResult = await deductCredits(5);
-    if (!creditResult.success) {
-      toast({
-        title: "Insufficient credits",
-        description: `You need 5 credits to generate. You have ${creditResult.credits || 0} credits. Credits refill at 25/hour (max 100).`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsGenerating(true);
     setGeneratedImage(null);
 
@@ -109,15 +96,11 @@ const Index = () => {
 
         toast({
           title: "Image generated!",
-          description: `5 credits used. ${creditResult.credits} credits remaining.`,
+          description: "Your AI-generated image is ready",
         });
       }
     } catch (error: any) {
       console.error("Generation error:", error);
-      
-      // Refund credits on error
-      await fetchCredits();
-      
       toast({
         title: "Generation failed",
         description: error.message || "Failed to generate image. Please try again.",
@@ -208,17 +191,6 @@ const Index = () => {
       return;
     }
 
-    // Check and deduct credits
-    const creditResult = await deductCredits(5);
-    if (!creditResult.success) {
-      toast({
-        title: "Insufficient credits",
-        description: `You need 5 credits to edit. You have ${creditResult.credits || 0} credits. Credits refill at 25/hour (max 100).`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsEditing(true);
     setEditedImage(null);
 
@@ -256,15 +228,11 @@ const Index = () => {
 
         toast({
           title: "Image edited!",
-          description: `5 credits used. ${creditResult.credits} credits remaining.`,
+          description: "Your AI-edited image is ready",
         });
       }
     } catch (error: any) {
       console.error("Edit error:", error);
-      
-      // Refund credits on error
-      await fetchCredits();
-      
       toast({
         title: "Edit failed",
         description: error.message || "Failed to edit image. Please try again.",
