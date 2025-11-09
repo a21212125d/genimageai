@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,6 +130,27 @@ const Auth = () => {
                 placeholder="Enter your password"
               />
             </div>
+
+            {!isLogin && (
+              <p className="text-xs text-muted-foreground text-center">
+                By creating an account, you agree to our{" "}
+                <Link 
+                  to="/terms-of-service" 
+                  className="text-primary hover:underline"
+                  target="_blank"
+                >
+                  Terms of Service
+                </Link>
+                {" "}and{" "}
+                <Link 
+                  to="/privacy-policy" 
+                  className="text-primary hover:underline"
+                  target="_blank"
+                >
+                  Privacy Policy
+                </Link>
+              </p>
+            )}
 
             <Button
               type="submit"
