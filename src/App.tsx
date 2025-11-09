@@ -8,8 +8,6 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Settings from "./pages/Settings";
-import Gallery from "./pages/Gallery";
-import { CollectionView } from "./components/Collections/CollectionView";
 
 const queryClient = new QueryClient();
 
@@ -22,8 +20,6 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/collection/:id" element={<CollectionView />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

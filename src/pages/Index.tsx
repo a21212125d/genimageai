@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Sparkles, Download, Upload, Image as ImageIcon, History, Shuffle, Smartphone, FolderOpen, Library, Bookmark } from "lucide-react";
+import { Loader2, Sparkles, Download, Upload, Image as ImageIcon, History, Shuffle, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,9 +14,6 @@ import { PromptEnhancer } from "@/components/PromptEnhancer";
 import { GenerationHistory } from "@/components/GenerationHistory";
 import { BannerAd } from "@/components/BannerAd";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
-import { CollectionManager } from "@/components/Collections/CollectionManager";
-import { PromptLibrary } from "@/components/PromptLibrary/PromptLibrary";
-import { SavePromptDialog } from "@/components/PromptLibrary/SavePromptDialog";
 
 
 const Index = () => {
@@ -37,25 +33,12 @@ const Index = () => {
   const [editedImage, setEditedImage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Prompt library & collections
-  const [promptLibraryOpen, setPromptLibraryOpen] = useState(false);
-  const [savePromptOpen, setSavePromptOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth");
     }
   }, [user, loading, navigate]);
-
-  // Check for stored prompt from gallery
-  useEffect(() => {
-    const storedPrompt = sessionStorage.getItem("selectedPrompt");
-    if (storedPrompt) {
-      setPrompt(storedPrompt);
-      sessionStorage.removeItem("selectedPrompt");
-    }
-  }, []);
 
   if (loading) {
     return (
@@ -296,15 +279,11 @@ const Index = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="generate" className="max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-4 glass-card">
+          <TabsList className="grid w-full grid-cols-3 glass-card">
             <TabsTrigger value="generate">Generate</TabsTrigger>
             <TabsTrigger value="history">
               <History className="w-4 h-4 mr-2" />
               History
-            </TabsTrigger>
-            <TabsTrigger value="collections">
-              <FolderOpen className="w-4 h-4 mr-2" />
-              Collections
             </TabsTrigger>
             <TabsTrigger value="download">
               <Smartphone className="w-4 h-4 mr-2" />
@@ -316,7 +295,7 @@ const Index = () => {
           <TabsContent value="generate" className="space-y-8 mt-8">
             <Card className="p-6 glass-card border-border/50">
               <div className="space-y-4">
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2">
                   <PromptEnhancer prompt={prompt} onEnhance={setPrompt} />
                   <Button
                     onClick={handleSurpriseMe}
@@ -325,14 +304,6 @@ const Index = () => {
                   >
                     <Shuffle className="w-4 h-4 mr-2" />
                     Surprise Me
-                  </Button>
-                  <Button
-                    onClick={() => setPromptLibraryOpen(true)}
-                    variant="outline"
-                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  >
-                    <Library className="w-4 h-4 mr-2" />
-                    Prompt Library
                   </Button>
                 </div>
 
@@ -576,11 +547,6 @@ const Index = () => {
           {/* History Tab */}
           <TabsContent value="history" className="mt-8">
             <GenerationHistory />
-          </TabsContent>
-
-          {/* Collections Tab */}
-          <TabsContent value="collections" className="mt-8">
-            <CollectionManager />
           </TabsContent>
 
           {/* Download Tab */}
