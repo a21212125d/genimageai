@@ -14,6 +14,7 @@ import { PromptEnhancer } from "@/components/PromptEnhancer";
 import { GenerationHistory } from "@/components/GenerationHistory";
 import { BannerAd } from "@/components/BannerAd";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
+import { CreditsDisplay } from "@/components/CreditsDisplay";
 
 
 const Index = () => {
@@ -60,6 +61,22 @@ const Index = () => {
       return;
     }
 
+    // Check credits
+    const { data: creditsData, error: creditsError } = await supabase
+      .from('user_credits')
+      .select('credits')
+      .eq('user_id', user!.id)
+      .single();
+
+    if (creditsError || !creditsData || creditsData.credits < 20) {
+      toast({
+        title: "Insufficient credits",
+        description: "You need at least 20 credits to generate an image. Please buy more credits.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
     setGeneratedImage(null);
 
@@ -73,6 +90,15 @@ const Index = () => {
       if (error) throw error;
 
       if (data?.image) {
+        // Deduct 20 credits
+        await supabase
+          .from('user_credits')
+          .update({ 
+            credits: creditsData.credits - 20,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user!.id);
+
         setGeneratedImage(data.image);
         
         // Validate image size before storing (5MB limit for base64)
@@ -96,7 +122,7 @@ const Index = () => {
 
         toast({
           title: "Image generated!",
-          description: "Your AI-generated image is ready",
+          description: "Your AI-generated image is ready (20 credits used)",
         });
       }
     } catch (error: any) {
@@ -191,6 +217,22 @@ const Index = () => {
       return;
     }
 
+    // Check credits
+    const { data: creditsData, error: creditsError } = await supabase
+      .from('user_credits')
+      .select('credits')
+      .eq('user_id', user!.id)
+      .single();
+
+    if (creditsError || !creditsData || creditsData.credits < 20) {
+      toast({
+        title: "Insufficient credits",
+        description: "You need at least 20 credits to edit an image. Please buy more credits.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsEditing(true);
     setEditedImage(null);
 
@@ -205,6 +247,15 @@ const Index = () => {
       if (error) throw error;
 
       if (data?.image) {
+        // Deduct 20 credits
+        await supabase
+          .from('user_credits')
+          .update({ 
+            credits: creditsData.credits - 20,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user!.id);
+
         setEditedImage(data.image);
         
         // Validate image size before storing (5MB limit for base64)
@@ -228,7 +279,7 @@ const Index = () => {
 
         toast({
           title: "Image edited!",
-          description: "Your AI-edited image is ready",
+          description: "Your AI-edited image is ready (20 credits used)",
         });
       }
     } catch (error: any) {
@@ -253,6 +304,9 @@ const Index = () => {
       <div className="relative z-10 container mx-auto px-4 py-24 md:py-28">
         {/* Hero Section */}
         <div className="text-center mb-12 space-y-4">
+          <div className="flex justify-center mb-4">
+            <CreditsDisplay />
+          </div>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-4">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm text-muted-foreground">Powered by Nano banana AI</span>
