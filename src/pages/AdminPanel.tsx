@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Gift } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface PaymentRequest {
   id: string;
@@ -27,6 +30,9 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState("");
+  const [creditsAmount, setCreditsAmount] = useState("");
+  const [givingCredits, setGivingCredits] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -167,6 +173,82 @@ const AdminPanel = () => {
     }
   };
 
+  const handleGiveCredits = async () => {
+    if (!userEmail.trim() || !creditsAmount.trim()) {
+      toast({
+        title: "Input required",
+        description: "Please enter both email and credits amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const credits = parseInt(creditsAmount);
+    if (isNaN(credits) || credits <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid positive number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGivingCredits(true);
+    try {
+      // Find user by email
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', userEmail.trim())
+        .single();
+
+      if (profileError || !profile) {
+        toast({
+          title: "User not found",
+          description: "No user found with this email address",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get current credits
+      const { data: currentCredits, error: creditsError } = await supabase
+        .from('user_credits')
+        .select('credits')
+        .eq('user_id', profile.id)
+        .single();
+
+      if (creditsError) throw creditsError;
+
+      // Update credits
+      const { error: updateError } = await supabase
+        .from('user_credits')
+        .update({
+          credits: (currentCredits?.credits || 0) + credits,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', profile.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Success",
+        description: `Added ${credits} credits to ${userEmail}`,
+      });
+
+      setUserEmail("");
+      setCreditsAmount("");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setGivingCredits(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -184,12 +266,23 @@ const AdminPanel = () => {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold mb-8 border-b border-white pb-4">Admin Panel</h1>
 
-        <div className="space-y-6">
-          <Card className="bg-black border-white border-2">
-            <CardHeader>
-              <CardTitle className="text-white">Payment Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Tabs defaultValue="payments" className="space-y-6">
+          <TabsList className="bg-black border-white border-2">
+            <TabsTrigger value="payments" className="data-[state=active]:bg-white data-[state=active]:text-black">
+              Payment Requests
+            </TabsTrigger>
+            <TabsTrigger value="credits" className="data-[state=active]:bg-white data-[state=active]:text-black">
+              <Gift className="w-4 h-4 mr-2" />
+              Give Credits
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="payments">
+            <Card className="bg-black border-white border-2">
+              <CardHeader>
+                <CardTitle className="text-white">Payment Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
               {paymentRequests.length === 0 ? (
                 <p className="text-gray-400">No payment requests</p>
               ) : (
@@ -287,7 +380,68 @@ const AdminPanel = () => {
               )}
             </CardContent>
           </Card>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="credits">
+            <Card className="bg-black border-white border-2">
+              <CardHeader>
+                <CardTitle className="text-white">Give Credits to User</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4 max-w-md">
+                  <div className="space-y-2">
+                    <Label htmlFor="userEmail" className="text-white">User Email</Label>
+                    <Input
+                      id="userEmail"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={userEmail}
+                      onChange={(e) => setUserEmail(e.target.value)}
+                      className="bg-black border-white text-white placeholder:text-gray-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="creditsAmount" className="text-white">Credits Amount</Label>
+                    <Input
+                      id="creditsAmount"
+                      type="number"
+                      placeholder="100"
+                      value={creditsAmount}
+                      onChange={(e) => setCreditsAmount(e.target.value)}
+                      className="bg-black border-white text-white placeholder:text-gray-500"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleGiveCredits}
+                    disabled={givingCredits}
+                    className="w-full bg-white text-black hover:bg-gray-200"
+                  >
+                    {givingCredits ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Gift className="w-4 h-4 mr-2" />
+                        Give Credits
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="pt-4 border-t border-white">
+                    <p className="text-sm text-gray-400">
+                      Enter the user's email address and the amount of credits to add to their account.
+                      The credits will be added immediately.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
